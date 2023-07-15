@@ -5,24 +5,25 @@
 
 def calculate_sum_of_bonus(data):
 # performance："above average":*0.05 "average"*0.03 "below average"*0.01
-# role："Engineer"+2000twd "CEO"+3000twd "Sales"+1000twd
+# role："Engineer"+20000twd "CEO"+30000twd "Sales"+10000twd
 # bonus = (salary + role) * performance
-    sum=0
+    bonus=0
     for i in range(len(data["employees"])):
         role=data["employees"][i]["role"]
         performance=data["employees"][i]["performance"]
         salary=data["employees"][i]["salary"]
-        sum=sum+(calculate_salary(salary)+calculate_role(role))*calculate_performance(performance)
-    if sum <10000:
-        print(round(sum))
-
+        bonus=bonus+(calculate_salary(salary)+calculate_role(role))*calculate_performance(performance)
+    if bonus>10000:
+        print(10000)  #確認邏輯是否正確
+    else:
+        print(round(bonus))
 def calculate_role(role):
     if role=="Engineer":
-        return(2000)
+        return(20000)
     elif role=="CEO":
-        return(3000)
+        return(30000)
     else:
-        return(1000)
+        return(10000)
 
 def calculate_performance(performance):
     if performance == "above average":

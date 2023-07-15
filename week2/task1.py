@@ -6,7 +6,7 @@
 def find_and_print(messages):
     # 迴圈、字串判斷、對字串做處理
     # write down your judgment rules in comments
-    # 判斷準則:字串中是否有以下條件"years>17","college student","vote for Donald Trump"，若有包含這些文字，則印出來名字
+    # 判斷準則:字串中是否有以下條件"18","college student","vote for Donald Trump"，若有包含這些文字，則印出來名字
     # your code here, based on your own rules
     nameover17=[]
     for name,description in messages.items():

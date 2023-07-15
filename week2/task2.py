@@ -9,18 +9,19 @@ def calculate_sum_of_bonus(data):
 # bonus = (salary + role) * performance
     bonus=0
     for i in range(len(data["employees"])):
-        role=data["employees"][i]["role"]
-        performance=data["employees"][i]["performance"]
-        salary=data["employees"][i]["salary"]
-        bonus=bonus+(calculate_salary(salary)+calculate_role(role))*calculate_performance(performance)
+        role = data["employees"][i]["role"]
+        performance = data["employees"][i]["performance"]
+        salary = data["employees"][i]["salary"]
+        bonus = bonus + (calculate_salary(salary)+calculate_role(role)) * calculate_performance(performance)
     if bonus>10000:
-        print(10000)  #確認邏輯是否正確
+        print(10000)
+        return # 確認邏輯是否正確，
     else:
         print(round(bonus))
 def calculate_role(role):
-    if role=="Engineer":
+    if role == "Engineer":    # 用字典方式 {"CEO":30000,"Engineer":20000,"Sale":10000}  If less
         return(20000)
-    elif role=="CEO":
+    elif role == "CEO":
         return(30000)
     else:
         return(10000)
@@ -37,10 +38,10 @@ def calculate_salary(salary):
     characters="USD,"
     try:
         if "USD" in salary:
-            salary=int(''.join(x for x in salary if x not in characters))*30
+            salary=int(''.join( x for x in salary if x not in characters)) * 30  # 命名正確性 x
             return(salary)
         else:
-            salary=int(''.join(x for x in salary if x not in characters))
+            salary=int(''.join( x for x in salary if x not in characters))
             return(salary)
     except:
         return(salary)

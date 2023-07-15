@@ -3,6 +3,8 @@
 # Using a loop to find out those who are most probably older than 17 years old based on example messages.
 # Print their names in the console.
 
+
+
 def find_and_print(messages):
     # 迴圈、字串判斷、對字串做處理
     # write down your judgment rules in comments
@@ -16,7 +18,7 @@ def find_and_print(messages):
 
 #
 def check_age(description):
-    keywords=["18","college","legal","vote"]
+    keywords=["18","college","legal","vote"] #比對數字大於17，轉出來
     for word in description.split():
         for keyword in keywords:
             if keyword in word:

@@ -8,7 +8,7 @@
 <body>
     <script>
 //task1
-/*
+
         function findAndPrint(messages){
     // write down your judgment rules in comments
     // 判斷準則:字串中是否有以下條件"18","college student","vote for Donald Trump"，若有包含這些文字，則印出來名字
@@ -23,7 +23,6 @@
             }
         function checkAge(description){
             const keywords=["18","college","legal","vote"];
-
             for(let word of description.split(" ")){
                 for(let keyword of keywords){
                     if(word.includes(keyword)){
@@ -40,15 +39,15 @@
         "Leslie":"I am of legal age in Taiwan.",
         "Vivian":"I will vote for Donald Trump next week",
         "Jenny":"Good morning." });
-*/
+
 //task2
         function calculateSumOfBonus(data){
     // write down your bonus rule in comments
-    /*
-    # performance："above average":*0.05 "average"*0.03 "below average"*0.01
-    # role："Engineer"+20000twd "CEO"+30000twd "Sales"+10000twd
-    # bonus = (salary + role) * performance
-    */
+    
+    //performance："above average":*0.05 "average"*0.03 "below average"*0.01
+    //role："Engineer"+20000twd "CEO"+30000twd "Sales"+10000twd
+    //bonus = (salary + role) * performance
+    
     // your code here, based on your own rules
             let bonus=0;
             for(let i=0;i<data["employees"].length;i++){
@@ -118,9 +117,30 @@
     }) 
 
 //task3
+
         function func(...data){
-        // your code here
-        }
+            let list=[];
+            for(let i=0; i < data.length; i++){
+                list.push(data[i][1]);
+            }
+            let notRepeat=[];
+            for (let j of list){
+                const count = list.filter(name => name === j).length;
+                if(count===1 && !notRepeat.includes(j)){
+                    notRepeat.push(j);
+                }
+            }
+            for(let q of data){
+                for(let k of notRepeat){
+                    if(q.includes(k)){
+                        console.log(q);
+                    }
+                }
+            }
+            if(notRepeat.length==0){
+                console.log("沒有")
+            }
+            }
         func("彭大牆", "王明雅", "吳明"); // print 彭大牆
         func("郭靜雅", "王立強", "林靜宜", "郭立恆", "林花花"); // print 林花花
         func("郭宣雅", "林靜宜", "郭宣恆", "林靜花"); // print 沒有
@@ -128,6 +148,19 @@
 //task4
         function getNumber(index){
         // your code here
+        if(index % 2 === 0){
+            let NumEven = 0;
+            for(let i = 0; i < index; i+=2){
+                NumEven+=3;     
+            }
+            console.log(NumEven);
+        }else{
+            let NumOdd = 4;
+            for(let j = 1; j < index; j+=2){
+                NumOdd+=3;
+            }
+            console.log(NumOdd);
+        }
         }
         getNumber(1); // print 4
         getNumber(5); // print 10

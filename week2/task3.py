@@ -6,15 +6,16 @@
 def func(*data):
     list=[]
     a=len(data)
+#將名字第二字放進清單中
     for i in range(a):
         list.append(data[i][1])
+#找出沒有重複的名字第二個字     
     not_repeat=[] 
-    for j in list:
-        a=''.join(list).count(j,0,len(list))
-        if a == 1 and j not in not_repeat:
+    for j in list:              
+        b=''.join(list).count(j,0,len(list))
+        if b == 1 and j not in not_repeat:
             not_repeat.append(j)
-
-    for q in data:
+    for q in data:              #可以不用到三個for
         for k in not_repeat:
             if k in q:
                 print(q)

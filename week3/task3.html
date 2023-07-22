@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week1</title>
+    <link rel="stylesheet" type="text/css" href="task3.css"/>
+</head>
+<body>
+    <div class="frame">
+        <div class="left">My website</div>
+        <div class="right-desktop">
+            <div class="item">Item 1</div>
+            <div class="item">Item 2</div>
+            <div class="item">Item 3</div>
+            <div class="item">Item 4</div>
+        </div>
+        <div class="right-mobile">
+            <img src="icon.png" alt="">
+        </div>
+    </div>
+    <div class="welcome">
+        <div class="text">Welcome to MyHome</div>
+    </div>
+    <div class="main-line">
+        <div class="line"></div>
+    </div>
+    <div class="main-card">
+        <div class="card">
+            </div>
+        </div>         
+    </div>
+    <div id="result"></div>
+    <script>
+    function getData(){
+        fetch("https://padax.github.io/taipei-day-trip-resources/taipei-attractions-assignment.json").then(function(response){
+            return response.json();
+        }).then(function(data){
+            let result=document.querySelector("#result");
+            let data1=data.result.results;
+            for(let i=0;i<3;i++){
+                let product=data1[i];
+                let container =document.createElement("div");
+                if(i==1){
+                    container.setAttribute("class", "line1 a")
+                }else if(i==2){
+                    container.setAttribute("class", "line1 b")
+                }else{
+                    container.setAttribute("class", "line1")
+                }
+                let image=document.createElement("img");
+                image.setAttribute("class","img-line");
+                image.src=product.file.substr(0,product.file.toLowerCase().indexOf('jpg')+3);
+                container.appendChild(image);
+                let stitle=document.createElement("div");
+                stitle.setAttribute("class", "text-line");
+                stitle.textContent=product.stitle;
+                container.appendChild(stitle);
+                document.querySelector(".line").appendChild(container);
+            }
+            for(let i=3;i<15;i++){ 
+                let product=data1[i];
+                let container =document.createElement("div");
+                container.setAttribute("class", "card1")
+
+                let image=document.createElement("img");
+                image.setAttribute("class","img-card");
+                image.src=product.file.substr(0,product.file.toLowerCase().indexOf('jpg')+3);
+                container.appendChild(image);
+
+                let stitle=document.createElement("div");
+                stitle.setAttribute("class", "text-card");
+                stitle.textContent=product.stitle;
+                container.appendChild(stitle);
+                document.querySelector(".card").appendChild(container);
+            }
+        });
+    }
+    getData();
+    </script>
+</body>
+</html>

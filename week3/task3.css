@@ -139,8 +139,10 @@ blockquote, q {
 
 }
 .img-card{
-    max-width: 100%;
+    width: 100%;
+    aspect-ratio: 4/3;
     display: block;
+    object-fit: cover;
 }
 .text-card{
     height: 100px;

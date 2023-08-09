@@ -111,7 +111,6 @@ def deleteMessage():
     cursor = db.cursor()
     cursor.execute("DELETE FROM message WHERE id=%s;",(message_id,))
     db.commit()
-
     return redirect("/member")
 
 

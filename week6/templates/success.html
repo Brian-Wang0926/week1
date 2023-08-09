@@ -48,7 +48,7 @@
                 <div class="container">
                     <nobr>{{ sender }}: {{ content }}</nobr>
                     <input type="hidden" name="message_id" value="{{ message_id }}">
-                    <button type="submit" id="deleteMessageButton" class="deleteMessageButton">X</button>
+                    <button type="submit" id="deleteMessageButton" class="deleteMessageButton" onclick="confirmDelete('{{ message_id }}')">X</button>
                 </div>
             </form>
         {% else %}
@@ -57,4 +57,12 @@
     {% endfor %}
     
 </body>
+<script>
+    function confirmDelete(messageId){
+        if(!confirm("確定要刪除這則訊息嗎？")){
+            return false;
+        }
+        this.form.submit();
+    }
+</script>
 </html>

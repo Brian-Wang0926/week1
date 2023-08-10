@@ -79,8 +79,9 @@ def member():
     print(message_lists)
 
     # 若沒有登入session，則跳回首頁
-    name = session['NAME']
-    if 'USER_ID' not in session:
+    name = session.get('NAME')
+
+    if name is None:
         return redirect("/")
     return render_template("success.html", name=name, message=message_lists)
 

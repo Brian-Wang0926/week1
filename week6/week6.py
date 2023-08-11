@@ -3,24 +3,32 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 
+# 將敏感資訊移至.env
 load_dotenv()
-db_password = os.environ.get('MYSQL_PASSWORD')
+mysql_password = os.environ.get('MYSQL_PASSWORD')
+mysql_host = os.environ.get('MYSQL_HOST')
+mysql_user = os.environ.get('MYSQL_USER')
+mysql_db = os.environ.get('MYSQL_DB')
+secret_key = os.environ.get('SECRET_KEY')
 
-app=Flask(__name__,static_folder="static",static_url_path="/")
-app.secret_key="any string but secret"
+app=Flask(__name__,static_folder="static",static_url_path="/static")
+app.secret_key = secret_key
 
 # 建置 MYSQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = db_password
-app.config['MYSQL_DB'] = 'website'
+db_config = {
+    'host': mysql_host,
+    'user': mysql_user,
+    'password': mysql_password,
+    'database': mysql_db
+}
+db = mysql.connector.connect(**db_config) # ** 代表將db_config字典unpacking成 key=value
 
-db = mysql.connector.connect(
-    host=app.config['MYSQL_HOST'],
-    user=app.config['MYSQL_USER'],
-    password=app.config['MYSQL_PASSWORD'],
-    database=app.config['MYSQL_DB']
-)
+# 建立資料庫操作函數
+def execute_query(query, params = None):
+    cursor = db.cursor(dictionary = True)
+    cursor.execute(query, params)
+    db.commit()
+    cursor.close()
 
 @app.route("/")
 def home():
@@ -32,14 +40,14 @@ def signup():
     username = request.form['username']
     password = request.form['password']
 
-
     # 檢查是否有重複 username，若有導向失敗頁面，若無導向首頁
     cursor = db.cursor()
     cursor.execute("SELECT * FROM member WHERE username=%s",(username,))
     existing_user = cursor.fetchone()
     if existing_user:
         error_message="帳號已經被註冊"
-        return redirect("/error?message="+error_message)
+        cursor.close()
+        return redirect(f"/error?message={error_message}")
     else:
         cursor.execute("INSERT INTO member(name, username, password) values(%s, %s, %s)",(name,username,password))
         db.commit()
@@ -50,44 +58,38 @@ def signup():
 def signin():
     username = request.form["username"]
     password = request.form["password"]
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM member WHERE username=%s and password=%s",(username,password))
+    
+    cursor = db.cursor(dictionary=True)
+    query = "SELECT * FROM member WHERE username=%s and password=%s"
+    cursor.execute(query,(username,password))
     user = cursor.fetchone()
+    cursor.close()
     if user:
-        user_id = user[0]
-        name = user[1]
-        username = user[2]
-        session['USER_ID'] = user_id
-        session['NAME'] = name
-        session['USERNAME'] = username
+        session['USER_ID'] = user['id']
+        session['NAME'] = user['name']
+        session['USERNAME'] = user['username']
         return redirect("/member")
     else:
         error_message="帳號或密碼輸入錯誤"
-        return redirect("/error?message="+error_message)
+        return redirect(f"/error?message={error_message}")
 
 @app.route("/member")
 def member():
-    cursor = db.cursor()
-    cursor.execute("select member.name, message.content, message.id from message inner join member on message.member_id=member.id ORDER BY message.id DESC;")
-    show_message = cursor.fetchall()
-
-    # 顯示留言
-    message_lists=[]
-    for message in show_message:
-        message_list = f"{message[0]}:{message[1]}:{message[2]}"
-        message_lists.append(message_list)
-    print(message_lists)
+    cursor = db.cursor(dictionary=True)
+    query = "select member.name, message.content, message.id from message inner join member on message.member_id=member.id ORDER BY message.id DESC;"
+    cursor.execute(query)
+    messages = cursor.fetchall()
+    cursor.close()
 
     # 若沒有登入session，則跳回首頁
     name = session.get('NAME')
-
     if name is None:
         return redirect("/")
-    return render_template("success.html", name=name, message=message_lists)
+    return render_template("success.html", name = name, messages = messages)
 
 @app.route("/error")
 def error():
-    message=request.args.get("message")
+    message = request.args.get("message")
     return render_template("error.html",message=message)
 
 @app.route("/signout")
@@ -97,23 +99,21 @@ def signout():
     session.pop('USERNAME', None)
     return redirect("/")
 
-@app.route("/createMessage",methods=["POST"])
+@app.route("/createMessage",methods = ["POST"])
 def createMessage():
     content = request.form["message"]
     member_id = session['USER_ID']
-    cursor = db.cursor()
-    cursor.execute("INSERT INTO message(member_id,content)values(%s,%s)",(member_id,content))
-    db.commit() 
+
+    query = "INSERT INTO message(member_id,content)values(%s,%s)"
+    execute_query(query,params=(member_id,content))
     return redirect("/member")
 
 @app.route("/deleteMessage",methods=["POST"])
 def deleteMessage():
     message_id = request.form["message_id"]
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM message WHERE id=%s;",(message_id,))
-    db.commit()
+    query = "DELETE FROM message WHERE id=%s;"
+    execute_query(query, params=(message_id,))
     return redirect("/member")
 
-
 if __name__ == '__main__':
-    app.run(debug=True,port=3000)
+    app.run(debug = True, port = 3000)

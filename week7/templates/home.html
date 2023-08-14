@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>首頁-登入畫面</title>
+    <link rel="stylesheet" href="../static/main.css">
+    <script src="../static/scripts.js"></script>
+</head>
+<body>
+    <div class="welcome">歡迎光臨，請註冊登入系統</div>
+    <br>
+    <h1>註冊帳號</h1>
+    <form action="/signup" method="POST" class="form" onsubmit="return validateForm(this);">
+        姓名 <input type="text" name="name" /><br>
+        帳號 <input type="text" name="username"/><br>
+        密碼 <input type="text" name="password"/><br>
+        <br>
+        <button type="submit" id="signupButton">註冊</button>
+    </form>
+    <hr/>
+    <h1>登入系統</h1>
+    <form action="/signin" method="POST" class="form" onsubmit="return validateForm(this);">
+        帳號 <input type="text" name="username"/><br>
+        密碼 <input type="text" name="password"/><br>
+        <br>
+        <button type="submit" id="signinButton">登入</button>
+    </form>
+</body>
+</html>

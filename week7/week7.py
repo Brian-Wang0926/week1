@@ -1,4 +1,4 @@
-from flask import Flask,render_template,redirect,request,session,json
+from flask import Flask,render_template,redirect,request,session,json,jsonify
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -87,6 +87,73 @@ def member():
         return redirect("/")
     return render_template("success.html", name = name, messages = messages)
 
+# 建立【查詢會員資料 API】
+@app.route("/api/member")
+def get_member():
+    username = request.args.get("username")
+    try:
+        # 查詢資料庫，是否有 username對應資料
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT * FROM member WHERE username=%s"
+        cursor.execute(query,(username,))
+        member = cursor.fetchone()
+        cursor.close()
+        # 若有則回傳json
+        if member:
+            response = {
+                "id": member["id"],
+                "name": member["name"],
+                "username": member["username"]
+            }
+            print(response)
+            return jsonify(response) # 回傳json格式
+        else:
+            response = {
+                "data": None
+            }
+            return jsonify(response)
+    except Exception as e:
+        print("error",e)
+        response = {
+            "data": None
+        }
+        return jsonify(response)
+
+# 建立【修改會員姓名 API
+@app.route("/api/member", methods=["PATCH"])
+def update_name():
+    if "USER_ID" not in session:
+        response = {
+            "error": True
+        }
+        return jsonify(response), 401 # Unauthorized status code
+
+    user_id = session.get('USER_ID')
+    new_name = request.json.get("name")
+    try:
+        if new_name:
+            cursor = db.cursor(dictionary=True)
+            query = "UPDATE member SET name = %s WHERE id=%s"
+            cursor.execute(query,(new_name,user_id))
+            db.commit()
+            cursor.close()
+            response = {
+                "ok":True
+            }
+            session['NAME'] = new_name
+            return jsonify(response)
+        else:
+            response = {
+                "error":True
+            }
+            return jsonify(response)
+    except Exception as e:
+        response = {
+            "error":True
+        }
+        return jsonify(response)
+
+
 @app.route("/error")
 def error():
     message = request.args.get("message")
@@ -116,4 +183,4 @@ def deleteMessage():
     return redirect("/member")
 
 if __name__ == '__main__':
-    app.run(debug = True, port = 3000)
+    app.run(debug = True, port = 5000)

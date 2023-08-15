@@ -10,9 +10,26 @@
     <div class="welcome">歡迎光臨，這是會員頁</div><br>
     <h1>{{ name }}，成功登入系統</h1>
     <a href="/signout">登出系統</a>
-    <br>
-    <br>
+    <br><br>
     <hr/>
+    <!-- 查詢會員 -->
+    <h1>查詢會員姓名</h1>
+    <form action="/api/member" method="GET" class="form">
+        <input type="text" name="username" />
+        <button type="button" id="memberButton" onclick="getMember()">查詢</button>
+    </form>
+    <p><span id="memberInfo"> </span></p>
+
+    <!-- 修改名字 -->
+    <h1>更新我的姓名</h1>
+    <form action="/api/member" method="PATCH" class="form">
+        <input type="text" name="newName" />
+        <button type="button" id="renameButton" onclick="rename()">更新</button>
+    </form>
+    <p><span id="renameInfo"> </span></p>
+    <hr/>
+
+    <!-- 留言板 -->
     <h1>快來留言吧</h1>
     <form action="/createMessage" method="POST" class="form">
         內容 <input type="text" name="message" /><br>

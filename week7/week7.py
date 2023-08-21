@@ -1,5 +1,6 @@
 from flask import Flask,render_template,redirect,request,session,json,jsonify
 import mysql.connector
+import mysql.connector.pooling
 import os
 from dotenv import load_dotenv
 
@@ -14,21 +15,35 @@ secret_key = os.environ.get('SECRET_KEY')
 app=Flask(__name__,static_folder="static",static_url_path="/static")
 app.secret_key = secret_key
 
-# 建置 MYSQL
-db_config = {
+# 設定連接池的配置
+connection_pool_config = {
+    'pool_name': 'my_connection_pool',
+    'pool_size': 5,
     'host': mysql_host,
     'user': mysql_user,
     'password': mysql_password,
     'database': mysql_db
 }
-db = mysql.connector.connect(**db_config) # ** 代表將db_config字典unpacking成 key=value
+# 建立連接池
+connection_pool = mysql.connector.pooling.MySQLConnectionPool(**connection_pool_config)
+
+# 建置 MYSQL
+# db_config = {
+#     'host': mysql_host,
+#     'user': mysql_user,
+#     'password': mysql_password,
+#     'database': mysql_db
+# }
+# db = mysql.connector.connect(**db_config) # ** 代表將db_config字典unpacking成 key=value
 
 # 建立資料庫操作函數
-def execute_query(query, params = None):
-    cursor = db.cursor(dictionary = True)
+def execute_query(query, params = None, fetch_one=False, fetch_all=False):
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor(dictionary = True)
     cursor.execute(query, params)
-    db.commit()
+    connection.commit()
     cursor.close()
+    connection.close()
 
 @app.route("/")
 def home():
@@ -41,63 +56,77 @@ def signup():
     password = request.form['password']
 
     # 檢查是否有重複 username，若有導向失敗頁面，若無導向首頁
-    cursor = db.cursor()
+    connection = connection_pool.get_connection()
+    cursor = connection.cursor()
     cursor.execute("SELECT * FROM member WHERE username=%s",(username,))
     existing_user = cursor.fetchone()
-    if existing_user:
-        error_message="帳號已經被註冊"
+    try:
+        if existing_user:
+            error_message="帳號已經被註冊"
+            cursor.close()
+            return redirect(f"/error?message={error_message}")
+        else:
+            cursor.execute("INSERT INTO member(name, username, password) values(%s, %s, %s)",(name,username,password))
+            connection.commit()
+            cursor.close()
+            return redirect("/")
+    finally:
         cursor.close()
-        return redirect(f"/error?message={error_message}")
-    else:
-        cursor.execute("INSERT INTO member(name, username, password) values(%s, %s, %s)",(name,username,password))
-        db.commit()
-        cursor.close()
-        return redirect("/")
+        connection.close()
+
 
 @app.route("/signin",methods=["POST"])
 def signin():
     username = request.form["username"]
     password = request.form["password"]
-    
-    cursor = db.cursor(dictionary=True)
-    query = "SELECT * FROM member WHERE username=%s and password=%s"
-    cursor.execute(query,(username,password))
-    user = cursor.fetchone()
-    cursor.close()
-    if user:
-        session['USER_ID'] = user['id']
-        session['NAME'] = user['name']
-        session['USERNAME'] = user['username']
-        return redirect("/member")
-    else:
-        error_message="帳號或密碼輸入錯誤"
-        return redirect(f"/error?message={error_message}")
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+        query = "SELECT * FROM member WHERE username=%s and password=%s"
+        cursor.execute(query,(username,password))
+        user = cursor.fetchone()
+        cursor.close()
+        if user:
+            session['USER_ID'] = user['id']
+            session['NAME'] = user['name']
+            session['USERNAME'] = user['username']
+            return redirect("/member")
+        else:
+            error_message="帳號或密碼輸入錯誤"
+            return redirect(f"/error?message={error_message}")
+    finally:
+        cursor.close()
+        connection.close()
+
 
 @app.route("/member")
 def member():
-    cursor = db.cursor(dictionary=True)
-    query = "select member.name, message.content, message.id from message inner join member on message.member_id=member.id ORDER BY message.id DESC;"
-    cursor.execute(query)
-    messages = cursor.fetchall()
-    cursor.close()
+    try:
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+        query = "select member.name, message.content, message.id from message inner join member on message.member_id=member.id ORDER BY message.id DESC;"
+        cursor.execute(query)
+        messages = cursor.fetchall()
 
-    # 若沒有登入session，則跳回首頁
-    name = session.get('NAME')
-    if name is None:
-        return redirect("/")
-    return render_template("success.html", name = name, messages = messages)
-
+        # 若沒有登入session，則跳回首頁
+        name = session.get('NAME')
+        if name is None:
+            return redirect("/")
+        return render_template("success.html", name = name, messages = messages)
+    finally:
+        cursor.close()
+        connection.close()
 # 建立【查詢會員資料 API】
 @app.route("/api/member")
 def get_member():
     username = request.args.get("username")
     try:
         # 查詢資料庫，是否有 username對應資料
-        cursor = db.cursor(dictionary=True)
+        connection = connection_pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
         query = "SELECT * FROM member WHERE username=%s"
         cursor.execute(query,(username,))
         member = cursor.fetchone()
-        cursor.close()
         # 若有則回傳json
         if member:
             response = {
@@ -118,6 +147,9 @@ def get_member():
             "data": None
         }
         return jsonify(response)
+    finally:
+        cursor.close()
+        connection.close()
 
 # 建立【修改會員姓名 API
 @app.route("/api/member", methods=["PATCH"])
@@ -132,11 +164,11 @@ def update_name():
     new_name = request.json.get("name")
     try:
         if new_name:
-            cursor = db.cursor(dictionary=True)
+            connection = connection_pool.get_connection()
+            cursor = connection.cursor(dictionary=True)
             query = "UPDATE member SET name = %s WHERE id=%s"
             cursor.execute(query,(new_name,user_id))
-            db.commit()
-            cursor.close()
+            connection.commit()
             response = {
                 "ok":True
             }
@@ -152,6 +184,9 @@ def update_name():
             "error":True
         }
         return jsonify(response)
+    finally:
+        cursor.close()
+        connection.close()
 
 
 @app.route("/error")
